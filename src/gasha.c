@@ -1,6 +1,4 @@
 /*
- * yasuna - Yasuna Oribe will talk.
- *
  * gasha.c
  *
  * Copyright (c) 2019 sasairc
