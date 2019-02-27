@@ -354,32 +354,31 @@ int main(void)
 #ifdef  VERBOSE
     size_t  j   = 0;
 
-    fprintf(stdout, "**** cards ****\n");
+    fprintf(stderr, "**** cards ****\n");
     for (i = 0; i < gasha->cardc; i++) {
-        fprintf(stdout, "id = %d, name = %s, rarity = %d\n",
+        fprintf(stderr, "id = %d, name = %s, rarity = %d\n",
                 gasha->card[i]->id, gasha->card[i]->name, gasha->card[i]->rarity);
     }
-    fprintf(stdout, "\n**** probabilities 1 ****\n");
-    fprintf(stdout, "\
+    fprintf(stderr, "\n**** probabilities 1 ****\n");
+    fprintf(stderr, "\
 rarity = 3, weight = %f %%\n\
 rarity = 4, weight = %f %%\n\
 rarity = 5, weight = %f %%\n",
            gasha->conf->weights[RARITY_R],
            gasha->conf->weights[RARITY_SR],
            gasha->conf->weights[RARITY_SSR]);
-    fprintf(stdout, "\n**** probabilities 2 ****\n");
+    fprintf(stderr, "\n**** probabilities 2 ****\n");
     for (i = RARITY_R; i <= RARITY_SSR; i++) {
         for (j = 0; j < count_by_rarity(gasha, i); j++) {
-            fprintf(stdout, "id = %d, weight = %f %%\n",
+            fprintf(stderr, "id = %d, weight = %f %%\n",
                     gasha->conf->probs[i][j]->id, gasha->conf->probs[i][j]->weight);
         }
     }
-    putchar('\n');
 /* VERBOSE */
 #endif
 
     if (gasha->is_ready(gasha)) {
-        for (i = 1; i <= 100; i++) {
+        for (i = 1; i <= 10; i++) {
             if (i % 10 == 0)
                 result = id2card(gasha, gasha->roll10(gasha));
             else
