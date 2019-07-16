@@ -1,5 +1,5 @@
 /*
- * gasha.h
+ * gasha.h - Gasha is a "Gacha System" emulation library written in C.
  *
  * Copyright (c) 2019 sasairc
  * This work is free. You can redistribute it and/or modify it under the
@@ -67,7 +67,6 @@ typedef struct GASHA_CONF {
 typedef struct GASHA {
     GASHA_CONF*     conf;
     GASHA_CARD**    card;
-    size_t          cardc;
     int             (*join_cards)(GASHA** gasha, GASHA_CARD cards[]);
     int             (*is_ready)(GASHA* gasha);
     uint32_t        (*roll)(GASHA* gasha);

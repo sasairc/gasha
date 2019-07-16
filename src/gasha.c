@@ -1,5 +1,5 @@
 /*
- * gasha.c
+ * gasha.c - Gasha is a "Gacha System" emulation library written in C.
  *
  * Copyright (c) 2019 sasairc
  * This work is free. You can redistribute it and/or modify it under the
@@ -55,7 +55,6 @@ int init_gasha(GASHA** gasha)
     } else {
         gs->conf        = NULL;
         gs->card        = NULL;
-        gs->cardc       = 0;
         gs->join_cards  = join_cards;
         gs->is_ready    = is_ready;
         gs->roll        = roll;
@@ -86,7 +85,7 @@ id2card(GASHA* gasha, uint32_t id)
 {
     size_t  i   = 0;
 
-    for (i = 0; i < gasha->cardc; i++) {
+    for (i = 0; gasha->card[i] != NULL; i++) {
         if (gasha->card[i]->id == id)
             return gasha->card[i];
     }
@@ -106,7 +105,7 @@ count_by_rarity(GASHA* gasha, uint32_t rarity)
     size_t  i   = 0,
             n   = 0;
 
-    for (i = 0; i < gasha->cardc; i++)
+    for (i = 0; gasha->card[i] != NULL; i++)
         if (gasha->card[i]->rarity == rarity)
             n++;
 
@@ -129,7 +128,7 @@ filter_by_rarity(GASHA* gasha, uint32_t rarity)
 #endif
         return NULL;
     }
-    for (i = 0; i < gasha->cardc; i++) {
+    for (i = 0; gasha->card[i] != NULL; i++) {
         if (gasha->card[i]->rarity == rarity) {
             dest[n] = gasha->card[i];
             n++;
@@ -347,22 +346,23 @@ void normalize_weight_of_rarity(GASHA** gasha)
 static
 int join_cards(GASHA** gasha, GASHA_CARD cards[])
 {
-    size_t  i   = 0;
+    size_t  i       = 0,
+            cardc   = 0;
+    
 
     if ((*gasha)->card != NULL)
         release_card(gasha);
 
-    for ((*gasha)->cardc = 0;
-            cards[(*gasha)->cardc].name != NULL; ((*gasha)->cardc)++);
+    for (cardc = 0; cards[cardc].name != NULL; cardc++);
     if (((*gasha)->card = (GASHA_CARD**)
-                malloc(sizeof(GASHA_CARD) * (*gasha)->cardc)) == NULL) {
+                malloc(sizeof(GASHA_CARD) * (cardc + 1))) == NULL) {
 #ifdef  LIBRARY_VERBOSE
         print_error();
 /* LIBRARY_VERBOSE */
 #endif
         goto ERR;
     }
-    for (i = 0; i < (*gasha)->cardc; i++) {
+    for (i = 0; i < cardc; i++) {
         if (((*gasha)->card[i] = (GASHA_CARD*)
                     malloc(sizeof(GASHA_CARD))) == NULL) {
 #ifdef  LIBRARY_VERBOSE
@@ -382,6 +382,7 @@ int join_cards(GASHA** gasha, GASHA_CARD cards[])
             }
         }
     }
+    (*gasha)->card[i] = NULL;
     config_probs(gasha);
 
     return 0;
@@ -440,8 +441,7 @@ static
 int is_ready(GASHA* gasha)
 {
     if (gasha->conf != NULL     &&
-            gasha->card != NULL &&
-            gasha->cardc > 0)
+            gasha->card != NULL)
         return 1;
 
     return 0;
@@ -543,19 +543,16 @@ void release_card(GASHA** gasha)
     if ((*gasha)->card == NULL)
         return;
 
-    for (i = 0; i < (*gasha)->cardc; i++) {
-        if ((*gasha)->card[i] != NULL) {
-            if ((*gasha)->card[i]->name != NULL) {
-                free((*gasha)->card[i]->name);
-                (*gasha)->card[i]->name = NULL;
-            }
-            free((*gasha)->card[i]);
-            (*gasha)->card[i] = NULL;
+    for (i = 0; (*gasha)->card[i] != NULL; i++) {
+        if ((*gasha)->card[i]->name != NULL) {
+            free((*gasha)->card[i]->name);
+            (*gasha)->card[i]->name = NULL;
         }
+        free((*gasha)->card[i]);
+        (*gasha)->card[i] = NULL;
     }
     free((*gasha)->card);
     (*gasha)->card = NULL;
-    (*gasha)->cardc = 0;
 
     return;
 }
