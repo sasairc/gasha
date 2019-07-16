@@ -107,3 +107,13 @@ int main(void)
 ## Kirara
 
 [kirara.c](https://raw.githubusercontent.com/sasairc/gasha/wip/kirara/kirara.c) -  Kirara Fantasia "Gacha" Simulator
+
+Official Web Site: https://kirarafantasia.com/
+
+## License
+
+[WTFPL version 2](https://raw.githubusercontent.com/sasairc/gasha/wip/LICENSE)
+
+## Author
+
+sasairc (https://github.com/sasairc)
