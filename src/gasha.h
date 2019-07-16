@@ -56,6 +56,7 @@ typedef struct GASHA_CONF {
     float           weights[6];
     GASHA_PROB***   probs;
     int             (*change_weight_of_rarity)(GASHA** gasha, uint32_t rarity, float weight);
+    int             (*change_random_number_generator)(GASHA** gasha, float (*fn)(void));
     void            (*normalize_weight_of_rarity)(GASHA** gasha);
     int             (*config_pickups)(GASHA** gasha, GASHA_PROB pickups[]);
     void            (*release)(GASHA** gasha);
@@ -72,10 +73,12 @@ typedef struct GASHA {
     uint32_t        (*roll)(GASHA* gasha);
     uint32_t        (*roll10)(GASHA* gasha);
     uint32_t        (*roll100)(GASHA* gasha);
+    float           (*gen_rval)(void);
     void            (*release)(GASHA* gasha);
 } GASHA;
 
 int init_gasha(GASHA** gasha);
+GASHA* new_gasha(void);
 GASHA_CARD* id2card(GASHA* gasha, uint32_t id);
 
 size_t count_by_rarity(GASHA* gasha, uint32_t rarity);

@@ -25,6 +25,7 @@
 static int create_config(GASHA** gasha);
 static int config_probs(GASHA** gasha);
 static int change_weight_of_rarity(GASHA** gasha, uint32_t rarity, float weight);
+static int change_random_number_generator(GASHA** gasha, float (*fn)(void));
 static void normalize_weight_of_rarity(GASHA** gasha);
 static int config_pickups(GASHA** gasha, GASHA_PROB pickups[]);
 static int sort_probs(GASHA** gasha, uint32_t rarity);
@@ -41,6 +42,12 @@ static void release_card(GASHA** gasha);
 static void release(GASHA* gasha);
 static float gen_rval(void);
 
+/*
+ * init_gasha()
+ *
+ * gasha を初期化する
+ *
+ */
 int init_gasha(GASHA** gasha)
 {
     GASHA*  gs  = NULL;
@@ -60,6 +67,7 @@ int init_gasha(GASHA** gasha)
         gs->roll        = roll;
         gs->roll10      = roll10;
         gs->roll100     = roll100;
+        gs->gen_rval    = gen_rval;
         gs->release     = release;
     }
     if (create_config(&gs) < 0)
@@ -73,6 +81,22 @@ ERR:
     release(gs);
     
     return -1;
+}
+
+/*
+ * new_gasha()
+ *
+ * init_gasha() のラッパ
+ */
+GASHA*
+new_gasha(void)
+{
+    GASHA*  gs  = NULL;
+
+    if (init_gasha(&gs) < 0)
+        return NULL;
+
+    return gs;
 }
 
 /*
@@ -142,7 +166,7 @@ filter_by_rarity(GASHA* gasha, uint32_t rarity)
 /*
  * create_config()
  *
- * レアリティに対する既定の確率を設定する
+ * gasha の設定を初期化する
  */
 static
 int create_config(GASHA** gasha)
@@ -158,18 +182,24 @@ int create_config(GASHA** gasha)
 #endif
         return -1;
     } else {
-        (*gasha)->conf->weights[RARITY_R]           = DEFAULT_WEIGHT_R;
-        (*gasha)->conf->weights[RARITY_SR]          = DEFAULT_WEIGHT_SR;
-        (*gasha)->conf->weights[RARITY_SSR]         = DEFAULT_WEIGHT_SSR;
-        (*gasha)->conf->change_weight_of_rarity     = change_weight_of_rarity;
-        (*gasha)->conf->normalize_weight_of_rarity  = normalize_weight_of_rarity;
-        (*gasha)->conf->config_pickups              = config_pickups;
-        (*gasha)->conf->release                     = release_conf;
+        (*gasha)->conf->weights[RARITY_R]               = DEFAULT_WEIGHT_R;
+        (*gasha)->conf->weights[RARITY_SR]              = DEFAULT_WEIGHT_SR;
+        (*gasha)->conf->weights[RARITY_SSR]             = DEFAULT_WEIGHT_SSR;
+        (*gasha)->conf->change_weight_of_rarity         = change_weight_of_rarity;
+        (*gasha)->conf->change_random_number_generator  = change_random_number_generator;
+        (*gasha)->conf->normalize_weight_of_rarity      = normalize_weight_of_rarity;
+        (*gasha)->conf->config_pickups                  = config_pickups;
+        (*gasha)->conf->release                         = release_conf;
     }
 
     return 0;
 }
 
+/*
+ * config_probs()
+ *
+ * 全カードの幅 weight を求める
+ */
 static
 int config_probs(GASHA** gasha)
 {
@@ -325,6 +355,19 @@ int change_weight_of_rarity(GASHA** gasha, uint32_t rarity, float weight)
 }
 
 /*
+ * gasha->conf->change_random_number_generator()
+ *
+ * 任意の乱数生成関数を登録する
+ */
+static int
+change_random_number_generator(GASHA** gasha, float (*fn)(void))
+{
+    (*gasha)->gen_rval = fn;
+
+    return 0;
+}
+
+/*
  * gasha->conf->normalize_weight_of_rarity()
  *
  * レアリティ別の確率を正規化する
@@ -420,7 +463,7 @@ uint32_t select_card(GASHA* gasha, uint32_t rarity)
      * rval = 0.615385 はやすなちゃん
      * rval = 0.692308 はソーニャちゃん
      */
-    rval = gen_rval();
+    rval = gasha->gen_rval();
     for (i = 0; i < count_by_rarity(gasha, rarity); i++) {
         if (rval <= gasha->conf->probs[rarity][i]->weight) {
             id = gasha->conf->probs[rarity][i]->id;
@@ -455,7 +498,7 @@ int is_ready(GASHA* gasha)
 static
 uint32_t roll(GASHA* gasha)
 {
-    float   rval    = gen_rval();
+    float   rval    = gasha->gen_rval();
 
     if (rval < gasha->conf->weights[RARITY_SSR])
         return select_card(gasha, RARITY_SSR);
@@ -475,7 +518,7 @@ uint32_t roll(GASHA* gasha)
 static
 uint32_t roll10(GASHA* gasha)
 {
-    float   rval    = gen_rval();
+    float   rval    = gasha->gen_rval();
 
     if (rval < gasha->conf->weights[RARITY_SSR])
         return select_card(gasha, RARITY_SSR);
@@ -573,7 +616,7 @@ void release(GASHA* gasha)
 /*
  * gen_rval()
  *
- * 乱数生成
+ * 既定の乱数生成関数
  */
 static
 float gen_rval(void)
