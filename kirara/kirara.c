@@ -1,22 +1,26 @@
 /*
- * gcc -lgasha kirara.c -o kirara
+ * kirara.c - Kirara Fantasia "Gacha" Simulator
+ *
+ * Copyright (c) 2019 sasairc
+ * This work is free. You can redistribute it and/or modify it under the
+ * terms of the Do What The Fuck You Want To Public License, Version 2,
+ * as published by Sam Hocevar.HocevarHocevar See the COPYING file or http://www.wtfpl.net/
+ * for more details.
  */
+
 #include <gasha.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#define VERBOSE
-//#define PICKUP
-
 int main(void)
 {
-    size_t      i           = 0;
+    size_t      i       = 0;
 
-    GASHA*      gasha       = NULL;
+    GASHA*      gasha   = new_gasha();
 
-    GASHA_CARD* result      = NULL;
+    GASHA_CARD* result  = NULL;
 
-    GASHA_CARD  cards[]     = {
+    GASHA_CARD  cards[] = {
         /*
          * ★★★
          */
@@ -365,7 +369,7 @@ int main(void)
         {0, NULL, 0},
     };
 
-#ifdef  PICKUP
+#ifdef  PICKUP_KMB
     GASHA_PROB  pickups[]   = {
         {1800000,   0.2},
         {1801000,   0.2},
@@ -378,25 +382,24 @@ int main(void)
         {1801200,   0.1},
         {0, 0.0},
     };
-/* PICKUP */
+/* PICKUP_KMB */
 #endif
 
-    init_gasha(&gasha);
     gasha->join_cards(&gasha, cards);
     gasha->conf->change_weight_of_rarity(&gasha, RARITY_R, 0.86);
     gasha->conf->change_weight_of_rarity(&gasha, RARITY_SR, 0.12);
     gasha->conf->change_weight_of_rarity(&gasha, RARITY_SSR, 0.02);
 
-#ifdef  PICKUP
+#ifdef  PICKUP_KMB
     gasha->conf->config_pickups(&gasha, pickups);
-/* PICKUP */
+/* PICKUP_KMB */
 #endif
 
 #ifdef  VERBOSE
     size_t  j   = 0;
 
     fprintf(stderr, "**** cards ****\n");
-    for (i = 0; i < gasha->cardc; i++) {
+    for (i = 0; gasha->card[i] != NULL; i++) {
         fprintf(stderr, "id = %d, name = %s, rarity = %d\n",
                 gasha->card[i]->id, gasha->card[i]->name, gasha->card[i]->rarity);
     }

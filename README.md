@@ -17,6 +17,7 @@ By default, `make install` installs the shared library under */usr/local/lib*, i
 
 ## API
 
+#### GASHA* new_gasha(void);
 #### int init_gasha(GASHA** gasha);
 
 #### int gasha->join_cards(GASHA** gasha, GASHA_CARD cards[]);
@@ -27,6 +28,7 @@ By default, `make install` installs the shared library under */usr/local/lib*, i
 #### void gasha->release(GASHA* gasha);
 
 #### int gasha->conf->change_weight_of_rarity(GASHA** gasha, uint32_t rarity, float weight);
+#### int gasha->conf->change_random_number_generator(GASHA** gasha, float (*fn)(void));
 #### void gasha->conf->normalize_weight_of_rarity(GASHA** gasha);
 #### int gasha->conf->config_pickups(GASHA** gasha, GASHA_PROB pickups[]);
 #### void gasha->conf->release(GASHA** gasha);
@@ -46,7 +48,7 @@ int main(void)
 {
     size_t      i       = 0;
 
-    GASHA*      gasha   = NULL;
+    GASHA*      gasha   = new_gasha();
     GASHA_CARD* result  = NULL;
     GASHA_CARD  cards[] = {
         {100,   "chara01",  3}, /* {id, "name", rarity} */
@@ -66,7 +68,6 @@ int main(void)
         {150,   "chara15",  5},
         {0, NULL, 0},
     };
-    init_gasha(&gasha);
     gasha->join_cards(&gasha, cards);
     gasha->conf->change_weight_of_rarity(&gasha, RARITY_R, 0.85);
     gasha->conf->change_weight_of_rarity(&gasha, RARITY_SR, 0.12);
@@ -105,4 +106,4 @@ int main(void)
 
 ## Kirara
 
-[kirara.c](https://raw.githubusercontent.com/sasairc/gasha/wip/kirara/kirara.c) -  Kirara Fantasia Simulator
+[kirara.c](https://raw.githubusercontent.com/sasairc/gasha/wip/kirara/kirara.c) -  Kirara Fantasia "Gacha" Simulator
