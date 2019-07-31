@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef  VERBOSE
+static void print_verbose(GASHA* gasha);
+/* VERBOSE */
+#endif
+
 int main(void)
 {
     size_t      i       = 0;
@@ -374,6 +379,11 @@ int main(void)
         {0, NULL, 0},
     };
 
+    gasha->join_cards(&gasha, cards);
+    gasha->conf->change_weight_of_rarity(&gasha, RARITY_R, 0.86);
+    gasha->conf->change_weight_of_rarity(&gasha, RARITY_SR, 0.12);
+    gasha->conf->change_weight_of_rarity(&gasha, RARITY_SSR, 0.02);
+
 #ifdef  PICKUP_KMB
     GASHA_PROB  pickups[]   = {
         {1800000,   0.2},
@@ -383,31 +393,49 @@ int main(void)
         {1801100,   0.2},
         {1802100,   0.2},
         {1800200,   0.1},
-        {1800201,   0.1},
         {1801200,   0.1},
         {0, 0.0},
     };
-/* PICKUP_KMB */
-#endif
-
-    gasha->join_cards(&gasha, cards);
-    gasha->conf->change_weight_of_rarity(&gasha, RARITY_R, 0.86);
-    gasha->conf->change_weight_of_rarity(&gasha, RARITY_SR, 0.12);
-    gasha->conf->change_weight_of_rarity(&gasha, RARITY_SSR, 0.02);
-
-#ifdef  PICKUP_KMB
     gasha->conf->config_pickups(&gasha, pickups);
 /* PICKUP_KMB */
 #endif
 
 #ifdef  VERBOSE
-    size_t  j   = 0;
+    print_verbose(gasha);
+/* VERBOSE */
+#endif
+
+    if (gasha->is_ready(gasha)) {
+        for (i = 1; i <= 10; i++) {
+            if (i % 10 == 0)
+                result = id2card(gasha, gasha->roll10(gasha));
+            else
+                result = id2card(gasha, gasha->roll(gasha));
+            if (result->rarity == 5)
+                fprintf(stdout, "%zu 回目の試行で 星%d の %s (id: %zu) が当たりました。やったね！\n",
+                        i, result->rarity, result->name, result->id);
+            else
+                fprintf(stdout, "%zu 回目の試行で 星%d の %s (id: %zu) が当たりました。\n",
+                        i, result->rarity, result->name, result->id);
+            usleep(10000);
+        }
+    }
+    gasha->release(gasha);
+
+    return 0;
+}
+
+#ifdef  VERBOSE
+static
+void print_verbose(GASHA* gasha)
+{
+    size_t  i   = 0,
+            j   = 0;
 
     fprintf(stderr, "**** cards ****\n");
-    for (i = 0; gasha->card[i] != NULL; i++) {
+    for (i = 0; gasha->card[i] != NULL; i++)
         fprintf(stderr, "id = %d, name = %s, rarity = %d\n",
                 gasha->card[i]->id, gasha->card[i]->name, gasha->card[i]->rarity);
-    }
     fprintf(stderr, "\n**** probabilities 1 ****\n");
     fprintf(stderr, "\
 rarity = 3, weight = %f %%\n\
@@ -423,25 +451,8 @@ rarity = 5, weight = %f %%\n",
                     gasha->conf->probs[i][j]->id, gasha->conf->probs[i][j]->weight);
         }
     }
+
+    return;
+}
 /* VERBOSE */
 #endif
-
-    if (gasha->is_ready(gasha)) {
-        for (i = 1; i <= 10; i++) {
-            if (i % 10 == 0)
-                result = id2card(gasha, gasha->roll10(gasha));
-            else
-                result = id2card(gasha, gasha->roll(gasha));
-            if (result->rarity == 5)
-                fprintf(stdout, "%zu 回目の試行で 星%d の %s が当たりました。やったね！\n",
-                        i, result->rarity, result->name);
-            else
-                fprintf(stdout, "%zu 回目の試行で 星%d の %s が当たりました。\n",
-                        i, result->rarity, result->name);
-            usleep(10000);
-        }
-    }
-    gasha->release(gasha);
-
-    return 0;
-}
